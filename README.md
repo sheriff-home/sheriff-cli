@@ -1,2 +1,0 @@
-# sheriff-cli
-sheriff-cli
