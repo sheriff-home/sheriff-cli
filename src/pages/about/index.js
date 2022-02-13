@@ -1,8 +1,10 @@
-import React, { Component } from 'react';
-import StyleWrap from './index.module.less'
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './app';
 
-export default class About extends Component {
-  render() {
-    return <div className={StyleWrap.about}>About</div>;
-  }
-}
+ReactDOM.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+  document.getElementById('root')
+)

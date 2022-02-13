@@ -5,6 +5,11 @@ const chalk = require('chalk')
 const getCSSModuleLocalIdent = require('react-dev-utils/getCSSModuleLocalIdent')
 const FriendlyErrorsWebpackPlugin = require('friendly-errors-webpack-plugin')
 const WebpackBar = require('webpackbar') // webpack编译显示的进度条
+const { setEntry, setHtmlPlugin } = require('./webpack.util')
+
+function resolve(dir) {
+  return path.join(__dirname, '..', dir)
+}
 
 // css
 const cssRegex = /\.css$/;
@@ -12,24 +17,23 @@ const cssModuleRegex = /\.module\.css$/;
 const lessRegex = /\.less$/;
 const lessModuleRegex = /\.module\.less$/;
 
-let entry = {
-  'common': ['./src/assets/js/common.js', './src/assets/css/common.less'],
-  'app': './src/index.js'
-}
-
 
 module.exports = {
-  entry: entry,
+  entry: setEntry(),
   output: {
     path: path.resolve(__dirname, '../dist'),
     filename: 'js/[name].js?t=[contenthash:8]',
     clean: true, // 在生成文件之前清空 output 目录
   },
+  cache: {
+    type: 'filesystem' // 开启缓存，提升构建速度
+  },
   module: {
     rules: [
       {
         test: /\.(js|jsx)$/,
-        exclude: /node_modules/,
+        exclude: /node_modules/, // 不处理node_modules
+        include: [resolve('src')],
         use: [
           {
             loader: 'babel-loader',
@@ -39,6 +43,20 @@ module.exports = {
           }
         ]
       },
+      // {
+      //   test: /\.(js|jsx)$/,
+      //   exclude: /node_modules/, // 不处理node_modules
+      //   include: [resolve('src')],
+      //   use: [
+      //     {
+      //       loader: 'esbuild-loader',
+      //       options: {
+      //         loader: 'jsx', 
+      //         target: 'es2015'
+      //       }
+      //     }
+      //   ]
+      // },
       // .css
       {
         test: cssRegex,
@@ -48,7 +66,19 @@ module.exports = {
             loader: MiniCssExtractPlugin.loader,
           },
           "css-loader", // 处理@import/require
-          "postcss-loader"
+          {
+            loader: 'postcss-loader',
+            options: {
+              postcssOptions: {
+                plugins: [
+                  [
+                    // 包含 autoprefixer，加浏览器前缀
+                    'postcss-preset-env',
+                  ],
+                ],
+              },
+            },
+          },
         ]
       },
       // .module.css
@@ -66,7 +96,18 @@ module.exports = {
               }
             }
           },
-          "postcss-loader"
+          {
+            loader: 'postcss-loader',
+            options: {
+              postcssOptions: {
+                plugins: [
+                  [
+                    'postcss-preset-env',
+                  ],
+                ],
+              },
+            },
+          },
         ]
       },
       // .less
@@ -78,7 +119,18 @@ module.exports = {
             loader: MiniCssExtractPlugin.loader,
           },
           "css-loader",
-          "postcss-loader",
+          {
+            loader: 'postcss-loader',
+            options: {
+              postcssOptions: {
+                plugins: [
+                  [
+                    'postcss-preset-env',
+                  ],
+                ],
+              },
+            },
+          },
           "less-loader"
         ]
       },
@@ -97,7 +149,18 @@ module.exports = {
               }
             }
           },
-          "postcss-loader",
+          {
+            loader: 'postcss-loader',
+            options: {
+              postcssOptions: {
+                plugins: [
+                  [
+                    'postcss-preset-env',
+                  ],
+                ],
+              },
+            },
+          },
           "less-loader"
         ]
       },
@@ -109,10 +172,8 @@ module.exports = {
             maxSize: 25 * 1024, // 大于25kb单独打包
           }
         },
-        generator:{ 
-          //与output.assetModuleFilename是相同的,这个写法引入的时候也会添加好这个路径
-          filename:'img/[name][ext]?t=[hash:8]',
-          // publicPath:'./'
+        generator: {
+          filename: 'img/[name][ext]?t=[hash:8]'
         },
       },
       {
@@ -125,15 +186,7 @@ module.exports = {
     ]
   },
   plugins: [
-    new htmlWebpackPlugin({
-      filename: 'index.html',
-      template: path.resolve(__dirname, '/public/index.html'),
-      // cdn
-      files: {
-        js: [],
-        css: []
-      }
-    }),
+    ...setHtmlPlugin(),
     new MiniCssExtractPlugin({
       filename: "css/[name].css?t=[contenthash:8]",
     }),
@@ -143,9 +196,11 @@ module.exports = {
     })
   ],
   resolve: {
+    extensions: ['.js', '.jsx', '.json'], // 需要解析的文件类型
     alias: {
       "@": path.resolve(__dirname, "./src") // 路径别名
-    }
+    },
+    symlinks: false // 不使用yarn link
   },
   stats: 'errors-only'
 }
