@@ -34,15 +34,16 @@ module.exports = merge(base, {
     // runtimeChunk: true, // 进一步拆分入口文件，减少入口文件的体积，但会增加网络请求
     // 拆包
     splitChunks: {
+      chunks: "all",
       cacheGroups: {
-        // // 来自node_modules的第三方模块
-        // vendors: {
-        //   name: 'vendors',
-        //   test: /[\\/]node_modules[\\/]/,
-        //   priority: 10,
-        //   chunks: 'all',
-        //   enforce: true // 忽略minSize、minChunks、maxAsyncRequests、maxInitialRequests选项，以当前规则去分包
-        // },
+        // 来自node_modules的第三方模块
+        'vendors': {
+          name: 'vendors',
+          test: /[\\/]node_modules[\\/]/,
+          priority: 10,
+          chunks: 'all',
+          enforce: true // 忽略minSize、minChunks、maxAsyncRequests、maxInitialRequests选项，以当前规则去分包
+        },
         // // react全家桶单独打包
         // 'react': {
         //   test: /[\\/]react(.+?)[\\/]/,
